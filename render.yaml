@@ -1,0 +1,13 @@
+services:
+  - type: web
+    name: frete-comex-pro-raio-x
+    runtime: python
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: python server.py
+    healthCheckPath: /health
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.11
+      - key: MAX_PDF_PER_HOUR
+        value: "15"
