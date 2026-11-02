@@ -1,9 +1,11 @@
 from http.server import ThreadingHTTPServer, SimpleHTTPRequestHandler
 from io import BytesIO
 from pathlib import Path
-import json, math, os, time, threading
+import json, math, os, time, threading, sqlite3, secrets, hmac, hashlib, base64, urllib.request, urllib.error, ssl
+from datetime import datetime, timezone
 from collections import defaultdict, deque
 from urllib.parse import urlsplit
+from contextlib import contextmanager
 from reportlab.pdfgen import canvas
 from reportlab.lib.colors import HexColor
 from reportlab.lib.utils import simpleSplit
@@ -150,6 +152,103 @@ def make_pdf(data):
  para(c,'Referências de consulta regulatória: www.gov.br/antt e www.gov.br/anpd',52,max(y,95),490,9,14,MUTED)
  c.showPage();c.save();return stream.getvalue()
 
+
+# Dados persistentes: configure DATABASE_URL (PostgreSQL) no Render.
+# SQLite é somente para desenvolvimento local; o disco do Render gratuito é efêmero.
+DATABASE_URL=os.environ.get('DATABASE_URL','').strip()
+DB_PATH=os.environ.get('SQLITE_PATH',str(ROOT/'local_diagnostics.sqlite3'))
+ADMIN_PASSWORD=os.environ.get('ADMIN_PASSWORD','')
+ADMIN_USER=os.environ.get('ADMIN_USER','admin')
+RESEND_API_KEY=os.environ.get('RESEND_API_KEY','')
+EMAIL_FROM=os.environ.get('EMAIL_FROM','')
+PUBLIC_URL=os.environ.get('PUBLIC_URL','').rstrip('/')
+RETENTION_DAYS=int(os.environ.get('RETENTION_DAYS','180'))
+DB_READY=False
+
+@contextmanager
+def db():
+ if DATABASE_URL:
+  import psycopg
+  with psycopg.connect(DATABASE_URL,connect_timeout=8) as con:
+   yield con
+ else:
+  con=sqlite3.connect(DB_PATH,timeout=8)
+  try:yield con;con.commit()
+  finally:con.close()
+
+def sql(con,query,args=()):
+ if DATABASE_URL:query=query.replace('?','%s')
+ return con.execute(query,args)
+
+def initialize_db():
+ global DB_READY
+ with db() as con:
+  sql(con,"""CREATE TABLE IF NOT EXISTS diagnostics (
+    id TEXT PRIMARY KEY, created_at TEXT NOT NULL, company TEXT NOT NULL,
+    responsible TEXT NOT NULL, email TEXT NOT NULL, fleet TEXT NOT NULL,
+    operation TEXT NOT NULL, score REAL NOT NULL, classification TEXT NOT NULL,
+    marketing INTEGER NOT NULL, email_status TEXT NOT NULL, payload TEXT NOT NULL)""")
+ DB_READY=True
+
+def store_diagnostic(payload, email, marketing):
+ sections,score,label,company,responsible=validate(payload)
+ identifier=secrets.token_urlsafe(18)
+ created=datetime.now(timezone.utc).isoformat()
+ with db() as con:
+  sql(con,"""INSERT INTO diagnostics (id,created_at,company,responsible,email,fleet,operation,score,classification,marketing,email_status,payload)
+   VALUES (?,?,?,?,?,?,?,?,?,?,?,?)""", (identifier,created,company,responsible,email,str(payload.get('company',{}).get('fleet',''))[:80],str(payload.get('company',{}).get('operation',''))[:80],score,label,int(marketing),'pending' if email else 'not_requested',json.dumps(payload,ensure_ascii=False)))
+ return identifier
+
+def email_pdf(email, pdf):
+ if not RESEND_API_KEY or not EMAIL_FROM:return 'not_configured'
+ data=json.dumps({'from':EMAIL_FROM,'to':[email],'subject':'Seu Raio-X da Precificação | Frete COMEX PRO',
+  'html':'<p>Seu diagnóstico gratuito Frete COMEX PRO está pronto.</p><p>O relatório personalizado segue em anexo.</p><p>Esta mensagem é operacional, referente ao diagnóstico solicitado.</p>',
+  'attachments':[{'filename':'Raio-X-Frete-COMEX-PRO.pdf','content':base64.b64encode(pdf).decode('ascii')}] }).encode()
+ request=urllib.request.Request('https://api.resend.com/emails',data=data,headers={'Authorization':'Bearer '+RESEND_API_KEY,'Content-Type':'application/json'},method='POST')
+ try:
+  with urllib.request.urlopen(request,timeout=15) as resp:return 'sent' if resp.status in (200,201,202) else 'failed'
+ except (urllib.error.URLError,TimeoutError):return 'failed'
+
+def cleanup():
+ cutoff=datetime.fromtimestamp(time.time()-RETENTION_DAYS*86400,timezone.utc).isoformat()
+ with db() as con:sql(con,'DELETE FROM diagnostics WHERE created_at < ?', (cutoff,))
+
+def admin_auth(handler):
+ if not ADMIN_PASSWORD:return False
+ value=handler.headers.get('Authorization','')
+ if not value.startswith('Basic '):return False
+ try:
+  userpass=base64.b64decode(value[6:],validate=True).decode('utf-8')
+  user,passwd=userpass.split(':',1)
+  return hmac.compare_digest(user,ADMIN_USER) and hmac.compare_digest(passwd,ADMIN_PASSWORD)
+ except (ValueError,UnicodeDecodeError):return False
+
+def dashboard():
+ with db() as con:
+  rows=sql(con,'SELECT score,classification,created_at,marketing FROM diagnostics ORDER BY created_at DESC').fetchall()
+  counts=sql(con,'SELECT classification,COUNT(*) FROM diagnostics GROUP BY classification').fetchall()
+  pillar_totals=[0.0]*6
+  for (raw,) in sql(con,'SELECT payload FROM diagnostics').fetchall():
+   try:
+    sections,_,_,_,_=validate(json.loads(raw))
+    for i,sec in enumerate(sections):pillar_totals[i]+=sec['pct']
+   except (ValueError,TypeError,KeyError):continue
+ n=len(rows)
+ return {'total':n,'average':round(sum(r[0] for r in rows)/n,1) if n else 0,
+  'classification':dict(counts),'marketing_opt_in':sum(r[3] for r in rows),
+  'pillars':[{'name':p[1],'average':round(pillar_totals[i]/n,1) if n else 0} for i,p in enumerate(PILLARS)],
+  'recent':[{'date':r[2][:10],'score':round(r[0],1),'classification':r[1]} for r in rows[:15]]}
+
+def json_reply(handler,code,obj):
+ body=json.dumps(obj,ensure_ascii=False).encode('utf-8')
+ handler.send_response(code);handler.send_header('Content-Type','application/json; charset=utf-8');handler.send_header('Content-Length',str(len(body)));handler.send_header('Cache-Control','no-store');handler.end_headers();handler.wfile.write(body)
+
+def read_json(handler):
+ if handler.headers.get('Content-Type','').split(';')[0].strip()!='application/json':raise ValueError('Envie application/json')
+ length=int(handler.headers.get('Content-Length','0'))
+ if length<1 or length>100000:raise ValueError('Tamanho de requisição inválido')
+ return json.loads(handler.rfile.read(length))
+
 # Limitação básica por instância (não substitui proteção de borda/WAF).
 RATE_LOCK=threading.Lock()
 RATE=defaultdict(deque)
@@ -173,12 +272,22 @@ class Handler(SimpleHTTPRequestHandler):
   print('%s %s' % (self.command, self.path.split('?')[0]),flush=True)
  def end_headers(self):
   self.send_header('X-Content-Type-Options','nosniff')
+  self.send_header('Strict-Transport-Security','max-age=31536000; includeSubDomains')
   self.send_header('Referrer-Policy','no-referrer')
   self.send_header('X-Frame-Options','DENY')
   self.send_header('Content-Security-Policy',"default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'self'; object-src 'none'; base-uri 'none'; frame-ancestors 'none'")
   super().end_headers()
  def do_GET(self):
   path=urlsplit(self.path).path
+  if path=='/admin':
+   if not admin_auth(self):
+    self.send_response(401);self.send_header('WWW-Authenticate','Basic realm=Frete COMEX PRO Admin');self.end_headers();return
+   self.path='/admin.html';super().do_GET();return
+  if path=='/api/admin/stats':
+   if not admin_auth(self):json_reply(self,401,{'error':'Acesso negado'});return
+   try:json_reply(self,200,dashboard())
+   except Exception:json_reply(self,503,{'error':'Banco indisponível'})
+   return
   if path=='/health':
    body=b'OK';self.send_response(200);self.send_header('Content-Type','text/plain; charset=utf-8');self.send_header('Content-Length',str(len(body)));self.send_header('Cache-Control','no-store');self.end_headers();self.wfile.write(body);return
   if path not in ('/','/index.html'):
@@ -187,7 +296,25 @@ class Handler(SimpleHTTPRequestHandler):
 
  def __init__(self,*args,**kwargs):super().__init__(*args,directory=str(ROOT),**kwargs)
  def do_POST(self):
-  if urlsplit(self.path).path!='/api/relatorio':self.send_error(404);return
+  route=urlsplit(self.path).path
+  if route not in ('/api/relatorio','/api/diagnosticos'):self.send_error(404);return
+  if route=='/api/diagnosticos':
+   if not permitted(self.client_address[0]):json_reply(self,429,{'error':'Limite de solicitações atingido'});return
+   try:
+    request=read_json(self);payload=request.get('diagnostic');email=str(request.get('email') or '').strip().lower()
+    if not isinstance(payload,dict):raise ValueError('Diagnóstico inválido')
+    if email and (len(email)>254 or '@' not in email or '.' not in email.split('@')[-1] or any(c.isspace() for c in email)):raise ValueError('E-mail inválido')
+    if request.get('privacyAccepted') is not True:raise ValueError('Confirme ciência do aviso de privacidade')
+    marketing=request.get('marketingOptIn') is True
+    validate(payload)
+    pdf=make_pdf(payload)
+    identifier=store_diagnostic(payload,email,marketing)
+    status=email_pdf(email,pdf) if email else 'not_requested'
+    with db() as con:sql(con,'UPDATE diagnostics SET email_status=? WHERE id=?',(status,identifier))
+    json_reply(self,201,{'id':identifier,'score':round(validate(payload)[1],2),'emailStatus':status,'pdfAvailable':True})
+   except (ValueError,KeyError,TypeError) as exc:json_reply(self,400,{'error':str(exc)[:150]})
+   except Exception:json_reply(self,503,{'error':'Não foi possível registrar o diagnóstico; tente novamente.'})
+   return
   if self.headers.get('Content-Type','').split(';')[0].strip()!='application/json':self.send_error(415,'Content-Type deve ser application/json');return
   if not permitted(self.client_address[0]):self.send_error(429,'Limite de relatórios atingido; tente mais tarde');return
   try:
@@ -200,4 +327,5 @@ class Handler(SimpleHTTPRequestHandler):
 if __name__=='__main__':
  port=int(os.environ.get('PORT','8000'))
  print(f'Frete COMEX PRO: http://localhost:{port}',flush=True)
+ initialize_db()
  ThreadingHTTPServer(('0.0.0.0',port),Handler).serve_forever()

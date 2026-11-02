@@ -1,37 +1,39 @@
-# Frete COMEX PRO — Raio-X da Precificação v1.3
+# Frete COMEX PRO — Raio-X v1.4
 
-Aplicação web de diagnóstico (24 perguntas, 6 pilares) com geração direta de relatório PDF de 8 páginas. **Piloto sem cadastro e sem armazenamento de respostas no servidor.**
+## O que foi implementado
+- Diagnóstico gratuito com 24 perguntas e relatório PDF direto (8 páginas).
+- Cadastro opcional de e-mail e opt-in comercial separado.
+- Persistência de diagnósticos em PostgreSQL (ou SQLite somente para testes locais).
+- Painel administrativo agregado em `/admin`, protegido por HTTP Basic Authentication.
+- Envio do PDF via API Resend, quando configurado. Download direto funciona sem e-mail.
+- Retenção: `RETENTION_DAYS`, padrão 180 dias; a rotina de limpeza deve ser agendada externamente para exclusão efetiva (não há agendador incluído).
 
 ## Executar localmente
+`pip install -r requirements.txt` e `python server.py`; acesse `http://localhost:8000`.
+Sem `DATABASE_URL`, o SQLite local é criado automaticamente.
 
-```bash
-python -m venv .venv
-source .venv/bin/activate  # Windows: .venv\Scripts\activate
-pip install -r requirements.txt
-python server.py
-```
+## Render — atualização a partir da v1.3
+1. Faça backup da v1.3 e envie os arquivos da v1.4 para o MESMO repositório GitHub.
+2. Configure as variáveis secretas no Render: `DATABASE_URL` (PostgreSQL persistente externo), `ADMIN_PASSWORD` (senha longa e aleatória), `ADMIN_USER` (opcional).
+3. Opcional: `RESEND_API_KEY` e `EMAIL_FROM` (remetente de domínio verificado no Resend). Sem esses valores, o cadastro funciona, mas o envio não ocorre; o PDF pode ser baixado.
+4. Faça o deploy, teste `/health`, as 24 perguntas, o registro, o PDF e `/admin`.
+5. No Render gratuito, o disco local é efêmero. **Não use SQLite para registros reais no Render.** O serviço requer banco PostgreSQL externo para persistência.
 
-Abra http://localhost:8000. Endpoint de saúde: http://localhost:8000/health.
+## Segurança e privacidade — antes de usar com terceiros
+- Configure identificação e canal de contato do controlador no aviso de privacidade, e revise a base legal, fornecedores, direitos dos titulares, transferência internacional e política de retenção.
+- O painel usa HTTP Basic e não tem autenticação corporativa, trilha de auditoria ou proteção avançada. Use apenas em piloto restrito; coloque autenticação de borda/SSO antes de produção.
+- Não há confirmação de posse do e-mail, proteção antispam distribuída, filas de e-mail, nem rotina automática de limpeza; adicione antes de escalar.
+- `RETENTION_DAYS` é configurável, mas a exclusão depende de chamar a função `cleanup()` em uma tarefa agendada externa. Não prometa exclusão automática antes de configurá-la.
+- Para não enviar dados de terceiros a um endereço digitado indevidamente, use e-mails próprios/autorizados nos testes e implemente verificação de e-mail antes de abertura pública.
+- As respostas são autoavaliação gerencial, não auditoria ou cálculo de lucro.
 
-## Publicar no Render (plano gratuito, sujeito às condições vigentes)
+## Rotas
+- `GET /` — formulário
+- `GET /health` — saúde
+- `POST /api/relatorio` — PDF sem cadastro
+- `POST /api/diagnosticos` — registro e envio opcional
+- `GET /admin` — painel protegido
+- `GET /api/admin/stats` — indicadores agregados protegidos
 
-1. Crie um repositório **privado** no GitHub e envie os arquivos desta pasta para a raiz do repositório (incluindo `render.yaml`). **Não envie dados de participantes ou PDFs reais.**
-2. Entre em https://dashboard.render.com e escolha **New > Blueprint**.
-3. Conecte sua conta GitHub e selecione o repositório. Confirme o serviço e o plano `free` antes de implantar.
-4. Aguarde o deploy e abra a URL `https://<nome-do-servico>.onrender.com` exibida pelo Render.
-5. Teste `/health`, preencha as 24 perguntas e faça o download do PDF.
-
-Se o Blueprint não oferecer plano gratuito na conta/região, não confirme serviço pago sem verificar o preço. Alternativamente, crie **New > Web Service**, com Build `pip install -r requirements.txt` e Start `python server.py`.
-
-## Segurança e limitações
-
-- Servidor recalcula a pontuação, valida as 24 respostas e não aceita acesso a arquivos internos via GET.
-- PDF é gerado em memória e retornado ao navegador. Nenhum banco de dados, cadastro ou envio por e-mail foi implementado.
-- Cabeçalhos de proteção básicos, limite de tamanho de payload e limitação simples por IP (15 PDFs/hora/instância). **Limitação em memória não é proteção completa contra abuso** e reinicia com a instância.
-- O tráfego público utiliza HTTPS disponibilizado pela plataforma de hospedagem.
-- **Não usar com dados pessoais de clientes reais antes de publicar política de privacidade, revisar bases legais, retenção e fornecedores**, e concluir testes de segurança.
-- Instâncias gratuitas podem hibernar, reiniciar e ter limitações de desempenho. O serviço não está configurado para produção com SLA.
-- Não existe autenticação; o link é acessível a qualquer pessoa que o receba.
-- A metodologia de maturidade é gerencial, não validada estatisticamente, e não substitui auditoria ou análise de conformidade.
-
-Referências: https://render.com/docs/blueprint-spec e https://render.com/docs/free ; LGPD: https://www.planalto.gov.br/ccivil_03/_ato2015-2018/2018/lei/l13709.htm
+## Custo
+Render gratuito pode suspender por inatividade. Banco persistente externo e serviço de e-mail podem ter custos/limites próprios. Confira planos antes de configurar.
