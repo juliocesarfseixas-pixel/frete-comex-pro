@@ -31,6 +31,7 @@ class V59HttpTests(unittest.TestCase):
         env = os.environ.copy()
         env.pop("DATABASE_URL", None)
         env["PORT"] = str(cls.port)
+        env["ENABLE_V59_PREVIEW"] = "1"
         env["SQLITE_PATH"] = str(Path(cls.temp.name) / "test.sqlite3")
         cls.server = subprocess.Popen(
             [sys.executable, "server.py"],
