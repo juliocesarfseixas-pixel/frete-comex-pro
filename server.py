@@ -304,6 +304,13 @@ class Handler(SimpleHTTPRequestHandler):
    try:json_reply(self,200,dashboard())
    except Exception:json_reply(self,503,{'error':'Banco indisponível'})
    return
+  if path=='/api/v59/capabilities':
+   if os.environ.get('ENABLE_V59_PREVIEW')!='1':
+    self.send_error(404);return
+   storage=os.environ.get('ENABLE_V59_STORAGE')=='1' and bool(DATABASE_URL)
+   email=storage and os.environ.get('ENABLE_V59_EMAIL')=='1' and bool(RESEND_API_KEY) and bool(EMAIL_FROM)
+   json_reply(self,200,{'preview':True,'storage':storage,'email':email})
+   return
   if path=='/health':
    body=b'OK';self.send_response(200);self.send_header('Content-Type','text/plain; charset=utf-8');self.send_header('Content-Length',str(len(body)));self.send_header('Cache-Control','no-store');self.end_headers();self.wfile.write(body);return
   if path not in ('/','/index.html'):
@@ -328,7 +335,22 @@ class Handler(SimpleHTTPRequestHandler):
     validated=validate_submission(request)
     with db() as connection:
      identifier=save_v59(connection,request)
-    json_reply(self,201,{'id':identifier,'result':validated['result'],'stored':True,'emailSent':False,'emailStatus':'not_requested'})
+    status='not_requested'
+    if os.environ.get('ENABLE_V59_EMAIL')=='1':
+     try:
+      from v59_email import send_v59_pdf
+      from v59_report import make_v59_full_report
+      pdf=make_v59_full_report(validated)
+      status=send_v59_pdf(validated['company']['email'],pdf,identifier)
+     except Exception:
+      status='failed'
+     try:
+      with db() as con:
+       sql(con,'UPDATE raiox_v59.diagnostics SET email_status=? WHERE id=?',(status,identifier))
+     except Exception:
+      # Registro original já foi confirmado; não repetir envio.
+      pass
+    json_reply(self,201,{'id':identifier,'result':validated['result'],'stored':True,'emailSent':status=='accepted','emailStatus':status})
    except (ValueError,TypeError,KeyError,UnicodeDecodeError,json.JSONDecodeError) as exc:
     json_reply(self,400,{'error':str(exc)[:160]})
    except Exception:
