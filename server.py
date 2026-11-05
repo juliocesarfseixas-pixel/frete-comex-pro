@@ -314,6 +314,10 @@ class Handler(SimpleHTTPRequestHandler):
  def do_POST(self):
   route=urlsplit(self.path).path
   if route in ('/api/v59/preview','/api/v59/relatorio'):
+   if os.environ.get('ENABLE_V59_PREVIEW','0')!='1':
+    self.send_error(404);return
+   if self.headers.get('Content-Type','').split(';')[0].strip()!='application/json':
+    self.send_error(415,'Content-Type deve ser application/json');return
    if not permitted(self.client_address[0]):
     json_reply(self,429,{'error':'Limite de solicitações atingido'});return
    try:
