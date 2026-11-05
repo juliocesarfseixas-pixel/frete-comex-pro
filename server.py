@@ -279,6 +279,22 @@ class Handler(SimpleHTTPRequestHandler):
   super().end_headers()
  def do_GET(self):
   path=urlsplit(self.path).path
+  if path in ('/v59-preview','/v59-preview/','/v59-preview/index.html','/v59-preview/privacidade.html','/v59-preview/termos.html'):
+   if os.environ.get('ENABLE_V59_PREVIEW','0')!='1':
+    self.send_error(404);return
+   target='index.html' if path in ('/v59-preview','/v59-preview/') else path.rsplit('/',1)[-1]
+   candidate=ROOT/'v59_preview'/target
+   if not candidate.is_file():
+    self.send_error(404,'Prévia visual ainda não instalada');return
+   data=candidate.read_bytes()
+   self.send_response(200)
+   self.send_header('Content-Type','text/html; charset=utf-8')
+   self.send_header('Content-Length',str(len(data)))
+   self.send_header('Cache-Control','no-store')
+   self.send_header('X-Robots-Tag','noindex, nofollow, noarchive')
+   self.end_headers()
+   self.wfile.write(data)
+   return
   if path=='/admin':
    if not admin_auth(self):
     self.send_response(401);self.send_header('WWW-Authenticate','Basic realm=Frete COMEX PRO Admin');self.end_headers();return
