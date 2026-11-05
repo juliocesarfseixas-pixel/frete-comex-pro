@@ -1,0 +1,460 @@
+{
+  "methodology": "governo-360-v5.9",
+  "questions": [
+    {
+      "order": 1,
+      "dimension": "Governança corporativa",
+      "question": "Sua transportadora possui regras claras para contratar e executar fretes?",
+      "options": [
+        "Não temos regras definidas",
+        "Cada pessoa decide como fazer",
+        "Temos orientações para algumas operações",
+        "Seguimos regras definidas para os fretes",
+        "Seguimos regras e verificamos seu cumprimento"
+      ],
+      "action": "Definir regras mínimas para cotação, aceite, documentação e execução do frete."
+    },
+    {
+      "order": 2,
+      "dimension": "Governança corporativa",
+      "question": "Existem limites definidos para aprovar descontos, despesas e contratações?",
+      "options": [
+        "Não existem limites definidos",
+        "Cada responsável decide conforme a necessidade",
+        "Algumas decisões precisam de autorização",
+        "Existem responsáveis e limites definidos",
+        "As aprovações seguem regras e ficam registradas"
+      ],
+      "action": "Definir limites de desconto, despesa e contratação, com responsáveis pela aprovação."
+    },
+    {
+      "order": 3,
+      "dimension": "Governança corporativa",
+      "question": "Sua empresa possui procedimentos para orientar motoristas e equipe operacional?",
+      "options": [
+        "Não temos orientações definidas",
+        "Orientamos verbalmente quando necessário",
+        "Temos instruções para algumas atividades",
+        "As principais atividades têm procedimentos",
+        "Orientamos, registramos e revisamos os procedimentos"
+      ],
+      "action": "Padronizar instruções essenciais de coleta, viagem, entrega e ocorrências."
+    },
+    {
+      "order": 4,
+      "dimension": "Governança corporativa",
+      "question": "Cada setor sabe quem é responsável pelas atividades e decisões?",
+      "options": [
+        "Não definimos responsáveis",
+        "As responsabilidades mudam conforme a situação",
+        "Algumas funções têm responsáveis definidos",
+        "Cada atividade importante tem responsável",
+        "As responsabilidades são registradas e revisadas"
+      ],
+      "action": "Definir responsáveis e substitutos para atividades e decisões críticas."
+    },
+    {
+      "order": 5,
+      "dimension": "Governança corporativa",
+      "question": "A direção acompanha os resultados financeiros e operacionais da transportadora?",
+      "options": [
+        "Não acompanhamos os resultados",
+        "Acompanhamos apenas quando surge problema",
+        "Conferimos alguns números sem rotina fixa",
+        "Acompanhamos resultados em reuniões periódicas",
+        "Acompanhamos indicadores e decidimos ações com registros"
+      ],
+      "action": "Criar reunião gerencial com indicadores de fretes, custos, prazos e ocorrências."
+    },
+    {
+      "order": 6,
+      "dimension": "Governança corporativa",
+      "question": "A equipe recebe orientações e prioridades para organizar as operações?",
+      "options": [
+        "Não definimos prioridades",
+        "As orientações são dadas quando alguém pergunta",
+        "Orientamos somente as operações mais urgentes",
+        "A equipe recebe programação e prioridades claras",
+        "Acompanhamos prioridades e ajustamos a programação"
+      ],
+      "action": "Definir rotina de alinhamento diário das operações e prioridades."
+    },
+    {
+      "order": 7,
+      "dimension": "Governança corporativa",
+      "question": "A empresa acompanha se as decisões e melhorias estão sendo executadas?",
+      "options": [
+        "Não acompanhamos as decisões",
+        "Cobramos as ações apenas quando lembramos",
+        "Acompanhamos algumas ações importantes",
+        "Definimos responsáveis e prazos para as ações",
+        "Registramos e verificamos a conclusão das ações"
+      ],
+      "action": "Registrar decisões, responsáveis, prazos e evidências de conclusão."
+    },
+    {
+      "order": 8,
+      "dimension": "Governança corporativa",
+      "question": "A transportadora confere documentos e requisitos antes de liberar as viagens?",
+      "options": [
+        "Não fazemos conferência",
+        "Conferimos apenas quando surge alguma dúvida",
+        "Conferimos somente alguns documentos",
+        "Conferimos os requisitos antes da liberação",
+        "Conferimos, registramos e tratamos pendências"
+      ],
+      "action": "Implantar conferência pré-viagem de documentos, carga, veículo e motorista."
+    },
+    {
+      "order": 9,
+      "dimension": "Governança corporativa",
+      "question": "A empresa verifica falhas, atrasos, avarias e reclamações dos clientes?",
+      "options": [
+        "Não registramos essas ocorrências",
+        "Verificamos apenas quando o cliente reclama",
+        "Registramos somente ocorrências graves",
+        "Registramos e analisamos as ocorrências",
+        "Analisamos causas, tendências e ações preventivas"
+      ],
+      "action": "Centralizar ocorrências e revisar causas de atrasos, avarias e reclamações."
+    },
+    {
+      "order": 10,
+      "dimension": "Governança corporativa",
+      "question": "Quando identifica um problema, a empresa acompanha a correção para evitar que se repita?",
+      "options": [
+        "Não acompanhamos as correções",
+        "Resolvemos apenas o problema imediato",
+        "Acompanhamos somente problemas mais graves",
+        "Registramos problemas e acompanhamos correções",
+        "Verificamos se a correção evitou nova ocorrência"
+      ],
+      "action": "Registrar causa, ação corretiva, responsável e verificação de eficácia."
+    },
+    {
+      "order": 11,
+      "dimension": "Tesouro e Pessoas",
+      "question": "Você sabe quanto ganha ou perde em cada frete?",
+      "options": [
+        "Não calculamos",
+        "Calculamos só alguns custos",
+        "Estimamos o lucro",
+        "Calculamos o resultado de cada frete",
+        "Calculamos e acompanhamos as margens"
+      ],
+      "action": "Implantar planilha de custo e margem por frete."
+    },
+    {
+      "order": 12,
+      "dimension": "Tesouro e Pessoas",
+      "question": "Sua empresa controla o dinheiro que entra e sai?",
+      "options": [
+        "Não controlamos",
+        "Conferimos apenas o saldo bancário",
+        "Anotamos entradas e saídas",
+        "Controlamos contas a pagar e receber",
+        "Controlamos e projetamos o caixa"
+      ],
+      "action": "Criar fluxo de caixa com contas a pagar e receber."
+    },
+    {
+      "order": 13,
+      "dimension": "Tesouro e Pessoas",
+      "question": "Seus motoristas recebem treinamento e orientação?",
+      "options": [
+        "Não recebem",
+        "Recebem orientação verbal",
+        "São orientados na contratação",
+        "Recebem treinamentos periódicos",
+        "Treinamos e registramos a participação"
+      ],
+      "action": "Criar calendário de treinamento e registrar presença."
+    },
+    {
+      "order": 14,
+      "dimension": "Tesouro e Pessoas",
+      "question": "Você verifica os documentos de motoristas e transportadores contratados?",
+      "options": [
+        "Não verificamos",
+        "Verificamos somente quando solicitado",
+        "Conferimos na contratação",
+        "Conferimos antes da operação",
+        "Conferimos e controlamos os vencimentos"
+      ],
+      "action": "Implantar cadastro e controle de vencimento documental."
+    },
+    {
+      "order": 15,
+      "dimension": "Tesouro e Pessoas",
+      "question": "Sua empresa confere os valores antes de emitir as cobranças dos fretes?",
+      "options": [
+        "Não conferimos",
+        "Conferimos quando há divergência",
+        "Conferimos apenas o valor do frete",
+        "Conferimos frete e adicionais",
+        "Conferimos e registramos a validação"
+      ],
+      "action": "Padronizar conferência de frete, adicionais e comprovantes antes do faturamento."
+    },
+    {
+      "order": 16,
+      "dimension": "Estratégia e Governança",
+      "question": "Cada colaborador sabe quais são suas responsabilidades?",
+      "options": [
+        "Não estão definidas",
+        "São combinadas verbalmente",
+        "Algumas funções estão definidas",
+        "Todas as funções estão definidas",
+        "Funções definidas e revisadas"
+      ],
+      "action": "Definir e divulgar responsabilidades por função."
+    },
+    {
+      "order": 17,
+      "dimension": "Estratégia e Governança",
+      "question": "Sua transportadora acompanha metas e resultados?",
+      "options": [
+        "Não temos metas",
+        "Temos metas informais",
+        "Acompanhamos algumas metas",
+        "Acompanhamos metas periodicamente",
+        "Acompanhamos e corrigimos desvios"
+      ],
+      "action": "Definir metas mensais e revisar resultados em reunião."
+    },
+    {
+      "order": 18,
+      "dimension": "Estratégia e Governança",
+      "question": "Sua empresa avalia os riscos que podem prejudicar a operação?",
+      "options": [
+        "Não avaliamos",
+        "Avaliamos depois de problemas",
+        "Avaliamos alguns riscos",
+        "Avaliamos antes das operações",
+        "Registramos riscos e medidas preventivas"
+      ],
+      "action": "Criar registro dos principais riscos e ações preventivas."
+    },
+    {
+      "order": 19,
+      "dimension": "Estratégia e Governança",
+      "question": "Sua equipe segue procedimentos nas atividades importantes?",
+      "options": [
+        "Não existem procedimentos",
+        "Cada pessoa trabalha do seu jeito",
+        "Algumas atividades têm procedimentos",
+        "As principais atividades são padronizadas",
+        "Padronizamos e verificamos o cumprimento"
+      ],
+      "action": "Documentar procedimentos das atividades críticas."
+    },
+    {
+      "order": 20,
+      "dimension": "Estratégia e Governança",
+      "question": "Quando ocorre um erro, a empresa procura evitar que se repita?",
+      "options": [
+        "Não investigamos",
+        "Resolvemos apenas o problema imediato",
+        "Investigamos alguns erros",
+        "Identificamos causas e aplicamos correções",
+        "Corrigimos e verificamos se funcionou"
+      ],
+      "action": "Registrar causas dos erros e verificar ações corretivas."
+    },
+    {
+      "order": 21,
+      "dimension": "Frota e Patrimônio",
+      "question": "Seus veículos possuem manutenção preventiva em dia?",
+      "options": [
+        "Não temos programação",
+        "Fazemos manutenção quando quebra",
+        "Fazemos algumas preventivas",
+        "Seguimos um plano de manutenção",
+        "Controlamos prazos e registramos serviços"
+      ],
+      "action": "Implantar plano de manutenção por veículo e quilometragem."
+    },
+    {
+      "order": 22,
+      "dimension": "Frota e Patrimônio",
+      "question": "Os motoristas fazem checklist antes das viagens?",
+      "options": [
+        "Não fazem",
+        "Conferem apenas visualmente",
+        "Alguns motoristas fazem",
+        "Todos fazem checklist",
+        "Fazem e registram as correções"
+      ],
+      "action": "Adotar checklist pré-viagem e tratar falhas antes da saída."
+    },
+    {
+      "order": 23,
+      "dimension": "Frota e Patrimônio",
+      "question": "Você verifica se o caminhão é adequado para cada carga?",
+      "options": [
+        "Não verificamos",
+        "Escolhemos pela disponibilidade",
+        "Conferimos apenas o peso",
+        "Conferimos peso, dimensões e tipo de carga",
+        "Conferimos e registramos a aprovação"
+      ],
+      "action": "Conferir peso, dimensões, tipo de carga e requisitos antes de alocar veículo."
+    },
+    {
+      "order": 24,
+      "dimension": "Frota e Patrimônio",
+      "question": "Sua empresa acompanha combustível e custos dos veículos?",
+      "options": [
+        "Não acompanhamos",
+        "Conferimos apenas os abastecimentos",
+        "Controlamos combustível",
+        "Controlamos combustível e manutenção",
+        "Acompanhamos custo por km e desvios"
+      ],
+      "action": "Consolidar abastecimento, manutenção e custo por quilômetro."
+    },
+    {
+      "order": 25,
+      "dimension": "Frota e Patrimônio",
+      "question": "Quando um veículo apresenta defeito, a ocorrência é registrada?",
+      "options": [
+        "Não registramos",
+        "Avisamos verbalmente",
+        "Registramos alguns defeitos",
+        "Registramos e acompanhamos os reparos",
+        "Analisamos falhas recorrentes"
+      ],
+      "action": "Registrar defeitos, reparos e reincidências por veículo."
+    },
+    {
+      "order": 26,
+      "dimension": "Transportes e Operações",
+      "question": "Antes de aceitar um frete, você confirma as informações da carga?",
+      "options": [
+        "Não confirmamos",
+        "Confirmamos apenas origem e destino",
+        "Confirmamos peso e volumes",
+        "Conferimos todos os requisitos da operação",
+        "Conferimos e registramos a validação"
+      ],
+      "action": "Criar checklist de aceitação da carga e requisitos da operação."
+    },
+    {
+      "order": 27,
+      "dimension": "Transportes e Operações",
+      "question": "Suas viagens são programadas com motorista, veículo e prazo definidos?",
+      "options": [
+        "Não programamos",
+        "Programamos verbalmente",
+        "Registramos parte das informações",
+        "Registramos a programação completa",
+        "Programamos e acompanhamos alterações"
+      ],
+      "action": "Registrar programação de viagem com responsáveis, prazos e alterações."
+    },
+    {
+      "order": 28,
+      "dimension": "Transportes e Operações",
+      "question": "Sua equipe acompanha os veículos durante as viagens?",
+      "options": [
+        "Não acompanhamos",
+        "Consultamos apenas quando necessário",
+        "Acompanhamos algumas viagens",
+        "Monitoramos todas as viagens",
+        "Monitoramos e tratamos alertas"
+      ],
+      "action": "Padronizar monitoramento e tratamento de alertas em viagem."
+    },
+    {
+      "order": 29,
+      "dimension": "Transportes e Operações",
+      "question": "Sua empresa controla os comprovantes de coleta e entrega?",
+      "options": [
+        "Não controlamos",
+        "Recebemos sem conferir",
+        "Conferimos apenas alguns comprovantes",
+        "Conferimos e arquivamos todos",
+        "Controlamos pendências e divergências"
+      ],
+      "action": "Criar controle de comprovantes e pendências por viagem."
+    },
+    {
+      "order": 30,
+      "dimension": "Transportes e Operações",
+      "question": "Quando ocorre atraso, avaria ou outro problema, o cliente é informado?",
+      "options": [
+        "Não informamos",
+        "Informamos quando o cliente pergunta",
+        "Informamos algumas ocorrências",
+        "Informamos assim que identificadas",
+        "Informamos e acompanhamos até a solução"
+      ],
+      "action": "Definir comunicação proativa de ocorrências e acompanhamento até solução."
+    },
+    {
+      "order": 31,
+      "dimension": "Comércio e Expansão",
+      "question": "Sua empresa responde às cotações dentro do prazo?",
+      "options": [
+        "Não controlamos prazos",
+        "Respondemos conforme disponibilidade",
+        "Priorizamos algumas cotações",
+        "Acompanhamos os prazos de resposta",
+        "Medimos e melhoramos o tempo de resposta"
+      ],
+      "action": "Controlar prazo e tempo de resposta das cotações."
+    },
+    {
+      "order": 32,
+      "dimension": "Comércio e Expansão",
+      "question": "Antes de fechar um frete, você confirma se consegue cumprir o serviço?",
+      "options": [
+        "Não confirmamos",
+        "Confirmamos apenas o veículo",
+        "Confirmamos disponibilidade e prazo",
+        "Validamos todos os requisitos operacionais",
+        "Validamos e registramos a aprovação"
+      ],
+      "action": "Validar capacidade, prazo e requisitos antes de aprovar a proposta."
+    },
+    {
+      "order": 33,
+      "dimension": "Comércio e Expansão",
+      "question": "As condições negociadas com os clientes ficam registradas?",
+      "options": [
+        "Não registramos",
+        "Combinamos verbalmente",
+        "Registramos apenas os valores",
+        "Registramos valores e condições",
+        "Registramos e comunicamos à operação"
+      ],
+      "action": "Registrar preço, adicionais, prazos e condições e comunicar à operação."
+    },
+    {
+      "order": 34,
+      "dimension": "Comércio e Expansão",
+      "question": "Sua empresa acompanha reclamações e satisfação dos clientes?",
+      "options": [
+        "Não acompanhamos",
+        "Tratamos apenas reclamações recebidas",
+        "Registramos algumas reclamações",
+        "Registramos e respondemos todas",
+        "Analisamos causas e melhorias"
+      ],
+      "action": "Registrar reclamações e acompanhar solução e causas."
+    },
+    {
+      "order": 35,
+      "dimension": "Comércio e Expansão",
+      "question": "Você acompanha quantas cotações se transformam em fretes?",
+      "options": [
+        "Não acompanhamos",
+        "Conferimos informalmente",
+        "Contamos as propostas aprovadas",
+        "Calculamos a taxa de conversão",
+        "Analisamos conversão por cliente e período"
+      ],
+      "action": "Medir propostas enviadas, aprovadas e conversão por período."
+    }
+  ]
+}
