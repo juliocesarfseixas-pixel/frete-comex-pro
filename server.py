@@ -313,6 +313,27 @@ class Handler(SimpleHTTPRequestHandler):
  def __init__(self,*args,**kwargs):super().__init__(*args,directory=str(ROOT),**kwargs)
  def do_POST(self):
   route=urlsplit(self.path).path
+  if route=='/api/v59/diagnosticos':
+   # Rota de persistência isolada, bloqueada até migração e homologação.
+   if os.environ.get('ENABLE_V59_PREVIEW')!='1' or os.environ.get('ENABLE_V59_STORAGE')!='1' or not DATABASE_URL:
+    self.send_error(404);return
+   if self.headers.get('Content-Type','').split(';')[0].strip()!='application/json':
+    self.send_error(415,'Content-Type deve ser application/json');return
+   if not permitted(self.client_address[0]):
+    json_reply(self,429,{'error':'Limite de solicitações atingido'});return
+   try:
+    from v59_api import validate_submission
+    from v59_storage import save_v59
+    request=read_json(self)
+    validated=validate_submission(request)
+    with db() as connection:
+     identifier=save_v59(connection,request)
+    json_reply(self,201,{'id':identifier,'result':validated['result'],'stored':True,'emailSent':False,'emailStatus':'not_requested'})
+   except (ValueError,TypeError,KeyError,UnicodeDecodeError,json.JSONDecodeError) as exc:
+    json_reply(self,400,{'error':str(exc)[:160]})
+   except Exception:
+    json_reply(self,503,{'error':'Não foi possível registrar o diagnóstico.'})
+   return
   if route in ('/api/v59/preview','/api/v59/relatorio'):
    if os.environ.get('ENABLE_V59_PREVIEW','0')!='1':
     self.send_error(404);return
