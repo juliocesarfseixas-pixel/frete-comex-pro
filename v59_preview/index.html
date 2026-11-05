@@ -380,6 +380,73 @@ $('start').onclick=()=>{if(!$('company').value.trim()){alert('Informe a razão s
       status.textContent='Não foi possível gerar o PDF no servidor: '+error.message+'. Use “Gerar / salvar PDF executivo” para salvar pelo navegador.';
     }finally{button.disabled=false;}
   });
+  /* Registro voluntário: só habilitado após confirmação da API. */
+  const register=document.createElement('button');
+  register.className='btn secondary';
+  register.type='button';
+  register.id='saveV59';
+  register.hidden=true;
+  register.textContent='Registrar diagnóstico';
+  const registerStatus=document.createElement('span');
+  registerStatus.id='saveV59Status';
+  registerStatus.className='muted';
+  registerStatus.setAttribute('role','status');
+  registerStatus.setAttribute('aria-live','polite');
+  const output=document.getElementById('export');
+  output.parentNode.insertBefore(register,output);
+  output.parentNode.insertBefore(registerStatus,output);
+  let capabilities={storage:false,email:false};
+  async function capabilitiesV59(){
+    try{
+      const response=await fetch('/api/v59/capabilities',{credentials:'same-origin'});
+      if(!response.ok)return;
+      const data=await response.json();
+      capabilities={storage:data.storage===true,email:data.email===true};
+      if(!capabilities.storage)return;
+      register.hidden=false;
+      register.textContent=capabilities.email?'Registrar e solicitar relatório por e-mail':'Registrar diagnóstico';
+      const emailNotice=document.getElementById('email').parentElement.querySelector('small');
+      if(emailNotice){
+        emailNotice.textContent=capabilities.email
+          ? 'Ao registrar o diagnóstico, o nome da transportadora, e-mail e respostas serão armazenados no servidor; o e-mail será usado somente para envio do relatório solicitado.'
+          : 'Ao clicar em Registrar diagnóstico, os dados e respostas serão armazenados no servidor. O envio por e-mail ainda não está disponível.';
+      }
+      const delivery=document.getElementById('deliveryStatus');
+      if(delivery)delivery.textContent=capabilities.email
+        ? 'Você pode baixar o relatório agora ou registrar o diagnóstico para solicitar a entrega por e-mail.'
+        : 'Você pode baixar seu relatório agora. O registro de respostas no servidor é opcional.';
+    }catch(e){ /* prévia estática, sem integração ativa */ }
+  }
+  register.addEventListener('click',async()=>{
+    if(fictitious){registerStatus.textContent='Demonstração: registro desativado.';return;}
+    if(!capabilities.storage){registerStatus.textContent='Registro não disponível.';return;}
+    const name=document.getElementById('company').value.trim();
+    const email=document.getElementById('email').value.trim();
+    if(!name||!document.getElementById('email').checkValidity()){
+      registerStatus.textContent='Nome da transportadora e e-mail válido são obrigatórios.';return;
+    }
+    if(!Array.isArray(answers)||answers.length!==35){registerStatus.textContent='Questionário incompleto.';return;}
+    const responses=answers.map(v=>Number.isInteger(v)&&v>=0&&v<=4?v:null);
+    const payload={company:{name,email,responsible:document.getElementById('owner').value.trim()},responses};
+    register.disabled=true;registerStatus.textContent='Registrando diagnóstico…';
+    try{
+      const response=await fetch('/api/v59/diagnosticos',{
+        method:'POST',headers:{'Content-Type':'application/json'},
+        credentials:'same-origin',body:JSON.stringify(payload)
+      });
+      let data={};try{data=await response.json()}catch(e){}
+      if(!response.ok)throw new Error(data.error||'Erro HTTP '+response.status);
+      registerStatus.textContent=data.emailStatus==='accepted'
+        ? 'Diagnóstico registrado. Envio do e-mail aceito pelo provedor (entrega ainda não confirmada).'
+        : data.emailStatus==='failed'
+          ? 'Diagnóstico registrado, mas o envio por e-mail falhou. Baixe o PDF pelo navegador.'
+          : 'Diagnóstico registrado. O envio por e-mail não está ativo neste ambiente.';
+    }catch(e){register.disabled=false;registerStatus.textContent='Registro não concluído: '+e.message;}
+  });
+  document.getElementById('again').addEventListener('click',()=>{
+    register.disabled=false;registerStatus.textContent='';
+  });
+  capabilitiesV59();
 })();
 </script>
 </body></html>
