@@ -297,6 +297,29 @@ class Handler(SimpleHTTPRequestHandler):
  def __init__(self,*args,**kwargs):super().__init__(*args,directory=str(ROOT),**kwargs)
  def do_POST(self):
   route=urlsplit(self.path).path
+  if route in ('/api/v59/preview','/api/v59/relatorio'):
+   if not permitted(self.client_address[0]):
+    json_reply(self,429,{'error':'Limite de solicitações atingido'});return
+   try:
+    from v59_api import validate_submission, make_summary_pdf
+    request=read_json(self)
+    validated=validate_submission(request)
+    if route=='/api/v59/preview':
+     json_reply(self,200,{'result':validated['result'],'status':'preview_only','stored':False,'emailSent':False})
+    else:
+     pdf=make_summary_pdf(request)
+     self.send_response(200)
+     self.send_header('Content-Type','application/pdf')
+     self.send_header('Content-Disposition','attachment; filename="raio-x-transportador-v59-preliminar.pdf"')
+     self.send_header('Content-Length',str(len(pdf)))
+     self.send_header('Cache-Control','no-store')
+     self.end_headers()
+     self.wfile.write(pdf)
+   except (ValueError,TypeError,KeyError,UnicodeDecodeError,json.JSONDecodeError) as exc:
+    json_reply(self,400,{'error':str(exc)[:160]})
+   except Exception:
+    json_reply(self,503,{'error':'Serviço de prévia temporariamente indisponível'})
+   return
   if route not in ('/api/relatorio','/api/diagnosticos'):self.send_error(404);return
   if route=='/api/diagnosticos':
    if not permitted(self.client_address[0]):json_reply(self,429,{'error':'Limite de solicitações atingido'});return
