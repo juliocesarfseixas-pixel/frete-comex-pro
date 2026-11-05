@@ -279,6 +279,22 @@ class Handler(SimpleHTTPRequestHandler):
   super().end_headers()
  def do_GET(self):
   path=urlsplit(self.path).path
+  if path in ('/v59-preview','/v59-preview/','/v59-preview/index.html','/v59-preview/privacidade.html','/v59-preview/termos.html'):
+   if os.environ.get('ENABLE_V59_PREVIEW','0')!='1':
+    self.send_error(404);return
+   target='index.html' if path in ('/v59-preview','/v59-preview/') else path.rsplit('/',1)[-1]
+   candidate=ROOT/'v59_preview'/target
+   if not candidate.is_file():
+    self.send_error(404,'Prévia visual ainda não instalada');return
+   data=candidate.read_bytes()
+   self.send_response(200)
+   self.send_header('Content-Type','text/html; charset=utf-8')
+   self.send_header('Content-Length',str(len(data)))
+   self.send_header('Cache-Control','no-store')
+   self.send_header('X-Robots-Tag','noindex, nofollow, noarchive')
+   self.end_headers()
+   self.wfile.write(data)
+   return
   if path=='/admin':
    if not admin_auth(self):
     self.send_response(401);self.send_header('WWW-Authenticate','Basic realm=Frete COMEX PRO Admin');self.end_headers();return
@@ -287,6 +303,13 @@ class Handler(SimpleHTTPRequestHandler):
    if not admin_auth(self):json_reply(self,401,{'error':'Acesso negado'});return
    try:json_reply(self,200,dashboard())
    except Exception:json_reply(self,503,{'error':'Banco indisponível'})
+   return
+  if path=='/api/v59/capabilities':
+   if os.environ.get('ENABLE_V59_PREVIEW')!='1':
+    self.send_error(404);return
+   storage=os.environ.get('ENABLE_V59_STORAGE')=='1' and bool(DATABASE_URL)
+   email=storage and os.environ.get('ENABLE_V59_EMAIL')=='1' and bool(RESEND_API_KEY) and bool(EMAIL_FROM)
+   json_reply(self,200,{'preview':True,'storage':storage,'email':email})
    return
   if path=='/health':
    body=b'OK';self.send_response(200);self.send_header('Content-Type','text/plain; charset=utf-8');self.send_header('Content-Length',str(len(body)));self.send_header('Cache-Control','no-store');self.end_headers();self.wfile.write(body);return
@@ -297,6 +320,70 @@ class Handler(SimpleHTTPRequestHandler):
  def __init__(self,*args,**kwargs):super().__init__(*args,directory=str(ROOT),**kwargs)
  def do_POST(self):
   route=urlsplit(self.path).path
+  if route=='/api/v59/diagnosticos':
+   # Rota de persistência isolada, bloqueada até migração e homologação.
+   if os.environ.get('ENABLE_V59_PREVIEW')!='1' or os.environ.get('ENABLE_V59_STORAGE')!='1' or not DATABASE_URL:
+    self.send_error(404);return
+   if self.headers.get('Content-Type','').split(';')[0].strip()!='application/json':
+    self.send_error(415,'Content-Type deve ser application/json');return
+   if not permitted(self.client_address[0]):
+    json_reply(self,429,{'error':'Limite de solicitações atingido'});return
+   try:
+    from v59_api import validate_submission
+    from v59_storage import save_v59
+    request=read_json(self)
+    validated=validate_submission(request)
+    with db() as connection:
+     identifier=save_v59(connection,request)
+    status='not_requested'
+    if os.environ.get('ENABLE_V59_EMAIL')=='1':
+     try:
+      from v59_email import send_v59_pdf
+      from v59_report import make_v59_full_report
+      pdf=make_v59_full_report(validated)
+      status=send_v59_pdf(validated['company']['email'],pdf,identifier)
+     except Exception:
+      status='failed'
+     try:
+      with db() as con:
+       sql(con,'UPDATE raiox_v59.diagnostics SET email_status=? WHERE id=?',(status,identifier))
+     except Exception:
+      # Registro original já foi confirmado; não repetir envio.
+      pass
+    json_reply(self,201,{'id':identifier,'result':validated['result'],'stored':True,'emailSent':status=='accepted','emailStatus':status})
+   except (ValueError,TypeError,KeyError,UnicodeDecodeError,json.JSONDecodeError) as exc:
+    json_reply(self,400,{'error':str(exc)[:160]})
+   except Exception:
+    json_reply(self,503,{'error':'Não foi possível registrar o diagnóstico.'})
+   return
+  if route in ('/api/v59/preview','/api/v59/relatorio'):
+   if os.environ.get('ENABLE_V59_PREVIEW','0')!='1':
+    self.send_error(404);return
+   if self.headers.get('Content-Type','').split(';')[0].strip()!='application/json':
+    self.send_error(415,'Content-Type deve ser application/json');return
+   if not permitted(self.client_address[0]):
+    json_reply(self,429,{'error':'Limite de solicitações atingido'});return
+   try:
+    from v59_api import validate_submission
+    from v59_report import make_v59_full_report
+    request=read_json(self)
+    validated=validate_submission(request)
+    if route=='/api/v59/preview':
+     json_reply(self,200,{'result':validated['result'],'status':'preview_only','stored':False,'emailSent':False})
+    else:
+     pdf=make_v59_full_report(validated)
+     self.send_response(200)
+     self.send_header('Content-Type','application/pdf')
+     self.send_header('Content-Disposition','attachment; filename="raio-x-transportador-v59-relatorio-executivo.pdf"')
+     self.send_header('Content-Length',str(len(pdf)))
+     self.send_header('Cache-Control','no-store')
+     self.end_headers()
+     self.wfile.write(pdf)
+   except (ValueError,TypeError,KeyError,UnicodeDecodeError,json.JSONDecodeError) as exc:
+    json_reply(self,400,{'error':str(exc)[:160]})
+   except Exception:
+    json_reply(self,503,{'error':'Serviço de prévia temporariamente indisponível'})
+   return
   if route not in ('/api/relatorio','/api/diagnosticos'):self.send_error(404);return
   if route=='/api/diagnosticos':
    if not permitted(self.client_address[0]):json_reply(self,429,{'error':'Limite de solicitações atingido'});return
