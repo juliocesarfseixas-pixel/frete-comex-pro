@@ -101,6 +101,17 @@ class V59HttpTests(unittest.TestCase):
             self.request("/api/v59/preview", payload)
         self.assertEqual(error.exception.code, 400)
 
+    def test_visual_preview_served(self):
+        for path, needle in [
+            ("/v59-preview/", "RAIO-X DO TRANSPORTADOR"),
+            ("/v59-preview/privacidade.html", "Privacidade"),
+            ("/v59-preview/termos.html", "Termos"),
+        ]:
+            with urllib.request.urlopen(f"http://127.0.0.1:{self.port}{path}", timeout=5) as response:
+                self.assertEqual(response.status, 200)
+                self.assertIn(needle, response.read().decode("utf-8"))
+                self.assertIn("noindex", response.headers.get("X-Robots-Tag", ""))
+
     def test_legacy_health_still_works(self):
         with urllib.request.urlopen(f"http://127.0.0.1:{self.port}/health") as response:
             self.assertEqual(response.read(), b"OK")
