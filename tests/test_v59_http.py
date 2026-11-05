@@ -112,6 +112,24 @@ class V59HttpTests(unittest.TestCase):
                 self.assertIn(needle, response.read().decode("utf-8"))
                 self.assertIn("noindex", response.headers.get("X-Robots-Tag", ""))
 
+    def test_capabilities_are_read_only_and_disabled_for_storage(self):
+        with urllib.request.urlopen(f"http://127.0.0.1:{self.port}/api/v59/capabilities",timeout=5) as response:
+            capabilities=json.load(response)
+        self.assertTrue(capabilities["preview"])
+        self.assertFalse(capabilities["storage"])
+        self.assertFalse(capabilities["email"])
+
+    def test_recording_is_off_without_database_credentials(self):
+        with self.assertRaises(urllib.error.HTTPError) as error:
+            self.request("/api/v59/diagnosticos", self.sample())
+        self.assertEqual(error.exception.code,404)
+
+    def test_production_homepage_is_not_replaced(self):
+        with urllib.request.urlopen(f"http://127.0.0.1:{self.port}/",timeout=5) as response:
+            html=response.read().decode("utf-8")
+        self.assertIn("FRETE COMEX PRO",html.upper())
+        self.assertNotIn("GOVERNO EMPRESARIAL 360°",html)
+
     def test_legacy_health_still_works(self):
         with urllib.request.urlopen(f"http://127.0.0.1:{self.port}/health") as response:
             self.assertEqual(response.read(), b"OK")
