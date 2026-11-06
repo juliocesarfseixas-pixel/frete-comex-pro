@@ -3,6 +3,7 @@ on:
   push:
     branches:
       - desenvolvimento-raio-x-v5-9
+      - reformulacao-essencia-raiox
   pull_request:
     branches:
       - main
@@ -26,3 +27,7 @@ jobs:
         run: python -m py_compile server.py v59_scoring.py v59_api.py
       - name: Testar motor e API V5.9
         run: python -m unittest discover -s tests -p 'test_v59_*.py' -v
+      - name: Conferir identidade e catálogo V5.9 original
+        run: python -m unittest discover -s tests -p 'test_raiox_essencia.py' -v
+      - name: Verificar sintaxe da nova interface
+        run: node --check experimentos/essencia-2026/app.js
