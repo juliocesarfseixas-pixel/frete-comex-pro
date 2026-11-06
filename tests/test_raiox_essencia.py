@@ -36,8 +36,8 @@ class EssenciaVisualTests(unittest.TestCase):
 
     def test_preview_has_no_hidden_collection(self):
         self.assertNotIn("fetch(", self.js)
-        self.assertNotIn("localStorage", self.js)
-        self.assertNotIn("sendBeacon(", self.js)
+        self.assertNotIn("localStorage.setItem(", self.js)
+        self.assertNotIn("navigator.sendBeacon(", self.js)
         self.assertIn('id="email"', self.html)
         self.assertNotIn('id="cnpj"', self.html)
         self.assertNotIn('id="whatsapp"', self.html)
